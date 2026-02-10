@@ -1,0 +1,10 @@
+# Google AdSense ads.txt file
+# Replace YOUR_PUBLISHER_ID with your actual AdSense Publisher ID (format: pub-XXXXXXXXXXXXXXXX)
+# You can find your Publisher ID in your AdSense account under Account > Account information
+
+google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
+
+# Additional ad networks can be added here
+# Example:
+# google.com, pub-1234567890123456, DIRECT, f08c47fec0942fa0
+

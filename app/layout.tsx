@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import { generateWebsiteSchema } from '@/lib/seo';
+import { generateWebsiteSchema, generateOrganizationSchema } from '@/lib/seo';
 import Providers from '@/components/Providers';
 import LayoutWrapper from '@/components/LayoutWrapper';
+import GoogleAnalytics from '@/components/GoogleAnalytics';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -56,8 +57,9 @@ export const metadata: Metadata = {
     },
   },
   verification: {
-    // Add your verification tokens here
-    // google: 'your-google-verification-code',
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+    // yandex: 'your-yandex-verification-code',
+    // bing: 'your-bing-verification-code',
   },
 };
 
@@ -67,15 +69,26 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const websiteSchema = generateWebsiteSchema();
+  const organizationSchema = generateOrganizationSchema();
 
   return (
     <html lang="vi" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/logo.png" />
+        <link rel="canonical" href={siteUrl} />
+
+        {/* Schema.org structured data */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
         />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
+
+        {/* Google AdSense */}
         {process.env.NEXT_PUBLIC_ADSENSE_ID && (
           <script
             async
@@ -85,6 +98,9 @@ export default function RootLayout({
         )}
       </head>
       <body className={`${inter.className} min-h-screen flex flex-col`}>
+        {/* Google Analytics */}
+        <GoogleAnalytics />
+
         <Providers>
           <LayoutWrapper>{children}</LayoutWrapper>
         </Providers>
