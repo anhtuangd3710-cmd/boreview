@@ -32,6 +32,7 @@
     "@types/node": "^25.2.2",
     "@types/react": "^19.2.13",
     "@types/react-dom": "^19.2.3",
+    "@vercel/analytics": "^1.6.1",
     "autoprefixer": "^10.4.24",
     "bcryptjs": "^3.0.3",
     "crypto-js": "^4.2.0",
