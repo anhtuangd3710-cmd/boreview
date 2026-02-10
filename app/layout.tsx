@@ -5,6 +5,7 @@ import { generateWebsiteSchema, generateOrganizationSchema } from '@/lib/seo';
 import Providers from '@/components/Providers';
 import LayoutWrapper from '@/components/LayoutWrapper';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
+import { Analytics } from '@vercel/analytics/next';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -100,6 +101,9 @@ export default function RootLayout({
       <body className={`${inter.className} min-h-screen flex flex-col`}>
         {/* Google Analytics */}
         <GoogleAnalytics />
+
+        {/* Vercel Analytics */}
+        <Analytics />
 
         <Providers>
           <LayoutWrapper>{children}</LayoutWrapper>
