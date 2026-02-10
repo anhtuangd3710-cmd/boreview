@@ -1,22 +1,13 @@
 import { MetadataRoute } from 'next';
 import prisma from '@/lib/prisma';
 
+// Force dynamic rendering - don't try to connect to DB during build
+export const dynamic = 'force-dynamic';
+
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // Get all published posts
-  const posts = await prisma.post.findMany({
-    where: { published: true },
-    select: { slug: true, updatedAt: true },
-    orderBy: { updatedAt: 'desc' },
-  });
-
-  // Get all categories
-  const categories = await prisma.category.findMany({
-    select: { slug: true, updatedAt: true },
-  });
-
-  // Static pages
+  // Static pages - always included
   const staticPages = [
     {
       url: siteUrl,
@@ -56,22 +47,40 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // Post pages
-  const postPages = posts.map((post) => ({
-    url: `${siteUrl}/blog/${post.slug}`,
-    lastModified: post.updatedAt,
-    changeFrequency: 'weekly' as const,
-    priority: 0.8,
-  }));
+  try {
+    // Get all published posts
+    const posts = await prisma.post.findMany({
+      where: { published: true },
+      select: { slug: true, updatedAt: true },
+      orderBy: { updatedAt: 'desc' },
+    });
 
-  // Category pages
-  const categoryPages = categories.map((category) => ({
-    url: `${siteUrl}/blog?category=${category.slug}`,
-    lastModified: category.updatedAt,
-    changeFrequency: 'weekly' as const,
-    priority: 0.6,
-  }));
+    // Get all categories
+    const categories = await prisma.category.findMany({
+      select: { slug: true, updatedAt: true },
+    });
 
-  return [...staticPages, ...postPages, ...categoryPages];
+    // Post pages
+    const postPages = posts.map((post) => ({
+      url: `${siteUrl}/blog/${post.slug}`,
+      lastModified: post.updatedAt,
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    }));
+
+    // Category pages
+    const categoryPages = categories.map((category) => ({
+      url: `${siteUrl}/blog?category=${category.slug}`,
+      lastModified: category.updatedAt,
+      changeFrequency: 'weekly' as const,
+      priority: 0.6,
+    }));
+
+    return [...staticPages, ...postPages, ...categoryPages];
+  } catch (error) {
+    // If database is not available, return only static pages
+    console.error('Sitemap: Database not available, returning static pages only', error);
+    return staticPages;
+  }
 }
 

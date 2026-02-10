@@ -6,6 +6,9 @@ import HeroSection from '@/components/HeroSection';
 import HomeSidebar from '@/components/HomeSidebar';
 import NewsletterSection from '@/components/NewsletterSection';
 
+// Force dynamic rendering - don't try to connect to DB during build
+export const dynamic = 'force-dynamic';
+
 async function getFeaturedPosts() {
   return prisma.post.findMany({
     where: { published: true, featured: true },

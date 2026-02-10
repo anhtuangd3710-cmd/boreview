@@ -1,6 +1,9 @@
 import prisma from '@/lib/prisma';
 import Link from 'next/link';
 
+// Force dynamic rendering - don't try to connect to DB during build
+export const dynamic = 'force-dynamic';
+
 async function getStats() {
   // Get today's date range
   const today = new Date();
