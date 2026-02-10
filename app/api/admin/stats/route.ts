@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { withAdminAuth, withCacheHeaders } from '@/lib/api-middleware';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 export const GET = withAdminAuth(
   async () => {
     const [

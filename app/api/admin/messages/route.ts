@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { withAdminAuth } from '@/lib/api-middleware';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 // GET - Lấy danh sách tin nhắn liên hệ
 export const GET = withAdminAuth(
   async (request: NextRequest) => {

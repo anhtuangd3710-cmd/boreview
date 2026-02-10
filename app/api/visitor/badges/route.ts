@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { withPublicRateLimit, withCacheHeaders } from '@/lib/api-middleware';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 // GET badges for visitor or all badges (Public with rate limiting)
 export const GET = withPublicRateLimit(
   async (request: NextRequest) => {

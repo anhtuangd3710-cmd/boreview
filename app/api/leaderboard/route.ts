@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { withPublicRateLimit, withCacheHeaders } from '@/lib/api-middleware';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 type Period = 'weekly' | 'monthly' | 'alltime';
 type Category = 'xp' | 'streak' | 'comments';
 
