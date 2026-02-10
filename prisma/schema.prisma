@@ -1,0 +1,417 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      String   @default("ADMIN")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  posts     Post[]
+}
+
+model Post {
+  id          String     @id @default(cuid())
+  title       String
+  slug        String     @unique
+  content     String
+  excerpt     String
+  youtubeUrl  String?
+  thumbnail   String?
+  published   Boolean    @default(false)
+  featured    Boolean    @default(false)
+  views       Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  publishedAt DateTime?
+  author      User       @relation(fields: [authorId], references: [id])
+  authorId    String
+  categories  Category[]
+  tags        Tag[]
+  comments    Comment[]
+  reactions   Reaction[]
+  poll        Poll?
+  aiSummary   String?    // Cached AI summary
+  aiSummaryAt DateTime?  // When summary was generated
+
+  // Gamification relations
+  pointTransactions PointTransaction[]
+  readingHistory    ReadingHistory[]
+  bookmarks         Bookmark[]
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  posts     Post[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  posts     Post[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Comment System
+model Comment {
+  id           String    @id @default(cuid())
+  content      String
+  authorName   String
+  ipHash       String
+  approved     Boolean   @default(true)
+  isAdminReply Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  post         Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId       String
+  parent       Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  parentId     String?
+  replies      Comment[] @relation("CommentReplies")
+}
+
+// Reaction System
+model Reaction {
+  id        String   @id @default(cuid())
+  type      String   // like, love, laugh, wow, sad
+  ipHash    String
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    String
+
+  @@unique([postId, ipHash, type])
+}
+
+// Poll System
+model Poll {
+  id        String       @id @default(cuid())
+  question  String
+  createdAt DateTime     @default(now())
+  post      Post         @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    String       @unique
+  options   PollOption[]
+}
+
+model PollOption {
+  id        String     @id @default(cuid())
+  text      String
+  poll      Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  pollId    String
+  votes     PollVote[]
+}
+
+model PollVote {
+  id        String     @id @default(cuid())
+  ipHash    String
+  createdAt DateTime   @default(now())
+  option    PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  optionId  String
+
+  @@unique([optionId, ipHash])
+}
+
+// Rate Limiting
+model RateLimit {
+  id        String   @id @default(cuid())
+  ipHash    String
+  action    String   // comment, poll, search, reaction
+  count     Int      @default(1)
+  windowStart DateTime @default(now())
+
+  @@unique([ipHash, action])
+}
+
+// IP Ban List
+model BannedIP {
+  id        String   @id @default(cuid())
+  ipHash    String   @unique
+  reason    String?
+  createdAt DateTime @default(now())
+}
+
+// ============================================
+// GAMIFICATION SYSTEM
+// ============================================
+
+// Visitor Profile (for non-admin users)
+model VisitorProfile {
+  id              String   @id @default(cuid())
+  username        String   @unique
+  displayName     String
+  email           String?  @unique
+  password        String?  // Optional for guest users
+  avatar          String?
+  bio             String?
+
+  // Gamification Stats
+  level           Int      @default(1)
+  totalXP         Int      @default(0)
+  currentStreak   Int      @default(0)
+  longestStreak   Int      @default(0)
+
+  // Account Status
+  isBanned        Boolean  @default(false)
+  bannedAt        DateTime?
+  bannedReason    String?
+
+  // Activity tracking
+  ipHash          String?  // For anonymous tracking before registration
+  lastActiveAt    DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  pointTransactions PointTransaction[]
+  badges            UserBadge[]
+  streak            Streak?
+  readingHistory    ReadingHistory[]
+  dailyTasks        UserDailyTask[]
+  notifications     Notification[]
+  bookmarks         Bookmark[]
+  following         Follow[]  @relation("Following")
+  followers         Follow[]  @relation("Followers")
+
+  @@index([ipHash])
+  @@index([totalXP])
+}
+
+// XP/Points Transaction History
+model PointTransaction {
+  id          String   @id @default(cuid())
+  points      Int
+  action      String   // read, comment, react, login, streak_bonus, daily_task, badge_earned, level_up
+  description String?
+
+  // Relations
+  visitor     VisitorProfile @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  visitorId   String
+  post        Post?    @relation(fields: [postId], references: [id], onDelete: SetNull)
+  postId      String?
+
+  createdAt   DateTime @default(now())
+
+  @@index([visitorId, createdAt])
+  @@index([action])
+}
+
+// Badge Definitions
+model Badge {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String
+  icon        String   // Emoji or icon name
+  category    String   // category, engagement, streak, special, seasonal
+  rarity      String   @default("common") // common, rare, epic, legendary
+
+  // Requirements (JSON stored as string)
+  requirement String   // e.g., {"type": "read_count", "category": "anime", "count": 10}
+  xpReward    Int      @default(50)
+
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  // Relations
+  earnedBy    UserBadge[]
+}
+
+// User's Earned Badges
+model UserBadge {
+  id        String   @id @default(cuid())
+  earnedAt  DateTime @default(now())
+
+  // Relations
+  visitor   VisitorProfile @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  visitorId String
+  badge     Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  badgeId   String
+
+  // Featured badge (shown on profile)
+  isFeatured Boolean @default(false)
+
+  @@unique([visitorId, badgeId])
+  @@index([visitorId])
+}
+
+// Streak Tracking
+model Streak {
+  id              String   @id @default(cuid())
+  currentStreak   Int      @default(0)
+  longestStreak   Int      @default(0)
+  lastCheckIn     DateTime @default(now())
+
+  // Streak freeze
+  freezesAvailable Int     @default(1)
+  freezesUsed      Int     @default(0)
+  lastFreezeReset  DateTime @default(now())
+
+  // Relations
+  visitor   VisitorProfile @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  visitorId String         @unique
+
+  @@index([currentStreak])
+}
+
+// Reading History
+model ReadingHistory {
+  id            String   @id @default(cuid())
+  readDuration  Int      @default(0) // seconds
+  progress      Int      @default(0) // 0-100 percentage
+  completed     Boolean  @default(false)
+  xpAwarded     Boolean  @default(false)
+
+  // Relations
+  visitor   VisitorProfile @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  visitorId String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    String
+
+  lastReadAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  @@unique([visitorId, postId])
+  @@index([visitorId, lastReadAt])
+}
+
+// Daily Task Definitions
+model DailyTask {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  icon        String
+  taskType    String   // read, comment, react, visit, share
+  requirement Int      @default(1) // Number needed to complete
+  xpReward    Int      @default(10)
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+
+  createdAt   DateTime @default(now())
+
+  // Relations
+  completions UserDailyTask[]
+}
+
+// User's Daily Task Progress
+model UserDailyTask {
+  id          String   @id @default(cuid())
+  date        DateTime @default(now()) // The day this task is for
+  progress    Int      @default(0)
+  completed   Boolean  @default(false)
+  completedAt DateTime?
+  xpAwarded   Boolean  @default(false)
+
+  // Relations
+  visitor   VisitorProfile @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  visitorId String
+  task      DailyTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId    String
+
+  @@unique([visitorId, taskId, date])
+  @@index([visitorId, date])
+}
+
+// Notifications
+model Notification {
+  id        String   @id @default(cuid())
+  type      String   // badge_earned, level_up, streak_reminder, new_reply, mention, system
+  title     String
+  message   String
+  link      String?  // Optional link to navigate to
+  read      Boolean  @default(false)
+
+  // Relations
+  visitor   VisitorProfile @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  visitorId String
+
+  createdAt DateTime @default(now())
+
+  @@index([visitorId, read])
+  @@index([visitorId, createdAt])
+}
+
+// Bookmarks
+model Bookmark {
+  id        String   @id @default(cuid())
+
+  // Relations
+  visitor   VisitorProfile @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  visitorId String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    String
+
+  createdAt DateTime @default(now())
+
+  @@unique([visitorId, postId])
+  @@index([visitorId])
+}
+
+// Follow System
+model Follow {
+  id          String   @id @default(cuid())
+
+  // Relations
+  follower    VisitorProfile @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
+  followerId  String
+  following   VisitorProfile @relation("Followers", fields: [followingId], references: [id], onDelete: Cascade)
+  followingId String
+
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+}
+
+// Leaderboard Cache (updated periodically)
+model LeaderboardCache {
+  id          String   @id @default(cuid())
+  period      String   // daily, weekly, monthly, alltime
+  category    String   // xp, streak, comments, reads
+  rankings    String   // JSON array of {visitorId, username, value, rank}
+
+  updatedAt   DateTime @default(now())
+
+  @@unique([period, category])
+}
+
+// Newsletter Subscribers
+model NewsletterSubscriber {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String?
+  subscribedAt  DateTime @default(now())
+  isActive      Boolean  @default(true)
+  unsubscribedAt DateTime?
+  source        String?  // homepage, footer, popup
+  ipHash        String?
+}
+
+// Contact Messages
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String
+  message   String
+  ipHash    String?
+  read      Boolean  @default(false)
+  replied   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  repliedAt DateTime?
+}
+

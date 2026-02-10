@@ -1,0 +1,77 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    # Warm-up phase
+    - duration: 30
+      arrivalRate: 5
+      name: "Warm up"
+    
+    # Ramp up load
+    - duration: 60
+      arrivalRate: 5
+      rampTo: 50
+      name: "Ramp up load"
+    
+    # Sustained load
+    - duration: 120
+      arrivalRate: 50
+      name: "Sustained load"
+    
+    # Spike test
+    - duration: 30
+      arrivalRate: 100
+      name: "Spike test"
+    
+    # Cool down
+    - duration: 30
+      arrivalRate: 10
+      name: "Cool down"
+
+  defaults:
+    headers:
+      User-Agent: "Artillery Load Test"
+      Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+
+scenarios:
+  - name: "Homepage browsing"
+    weight: 40
+    flow:
+      - get:
+          url: "/"
+      - think: 2
+      - get:
+          url: "/blog"
+      - think: 3
+
+  - name: "Blog article reading"
+    weight: 30
+    flow:
+      - get:
+          url: "/blog"
+      - think: 2
+      - get:
+          url: "/blog/welcome-to-our-blog"
+      - think: 5
+
+  - name: "API calls"
+    weight: 20
+    flow:
+      - get:
+          url: "/api/posts"
+      - think: 1
+      - post:
+          url: "/api/posts/welcome-post-id/view"
+          json: {}
+
+  - name: "Static pages"
+    weight: 10
+    flow:
+      - get:
+          url: "/about"
+      - think: 2
+      - get:
+          url: "/contact"
+      - think: 2
+      - get:
+          url: "/privacy"
+
