@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { title, content, excerpt, youtubeUrl, thumbnail, published, featured, categories, tags } = body;
+    const { title, content, excerpt, youtubeUrl, thumbnail, published, featured, categories, tags, seoTitle, metaDescription, customSlug } = body;
 
     if (!title || !content || !excerpt) {
       return NextResponse.json(
@@ -112,8 +112,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate unique slug
-    let slug = slugify(title, { lower: true, strict: true });
+    // Generate unique slug (use custom slug if provided, otherwise generate from title)
+    let slug = customSlug
+      ? slugify(customSlug, { lower: true, strict: true })
+      : slugify(title, { lower: true, strict: true });
     const existingPost = await prisma.post.findUnique({ where: { slug } });
     if (existingPost) {
       slug = `${slug}-${Date.now()}`;
@@ -131,6 +133,8 @@ export async function POST(request: NextRequest) {
         featured: featured || false,
         publishedAt: published ? new Date() : null,
         authorId: session.user.id,
+        seoTitle: seoTitle || null,
+        metaDescription: metaDescription || null,
         categories: categories?.length
           ? { connect: categories.map((id: string) => ({ id })) }
           : undefined,

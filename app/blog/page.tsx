@@ -1,13 +1,14 @@
 import { Metadata } from 'next';
-import prisma from '@/lib/prisma';
 import PostCard from '@/components/PostCard';
 import Pagination from '@/components/Pagination';
 import SearchBar from '@/components/SearchBar';
 import { InArticleAd } from '@/components/AdSense';
 import Link from 'next/link';
+import { getPaginatedPosts, getCategoriesWithCount } from '@/lib/queries';
 
-// ISR: Revalidate every 60 seconds
-export const revalidate = 60;
+// Force dynamic rendering - database queries happen at runtime
+// React cache() in lib/queries.ts handles request deduplication
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Bài viết - Bơ Review',
@@ -18,56 +19,15 @@ interface BlogPageProps {
   searchParams: { page?: string; search?: string; category?: string };
 }
 
-async function getPosts(page: number, search: string, category: string) {
-  const limit = 9;
-  const skip = (page - 1) * limit;
-
-  const where: Record<string, unknown> = { published: true };
-
-  if (search) {
-    where.OR = [
-      { title: { contains: search } },
-      { content: { contains: search } },
-      { excerpt: { contains: search } },
-    ];
-  }
-
-  if (category) {
-    where.categories = { some: { slug: category } };
-  }
-
-  const [posts, total] = await Promise.all([
-    prisma.post.findMany({
-      where,
-      include: {
-        author: { select: { id: true, name: true, email: true } },
-        categories: true,
-      },
-      orderBy: { publishedAt: 'desc' },
-      skip,
-      take: limit,
-    }),
-    prisma.post.count({ where }),
-  ]);
-
-  return { posts, total, totalPages: Math.ceil(total / limit) };
-}
-
-async function getCategories() {
-  return prisma.category.findMany({
-    include: { _count: { select: { posts: true } } },
-    orderBy: { name: 'asc' },
-  });
-}
-
 export default async function BlogPage({ searchParams }: BlogPageProps) {
   const page = parseInt(searchParams.page || '1');
   const search = searchParams.search || '';
   const category = searchParams.category || '';
 
+  // Using cached queries for better performance
   const [{ posts, total, totalPages }, categories] = await Promise.all([
-    getPosts(page, search, category),
-    getCategories(),
+    getPaginatedPosts(page, search, category),
+    getCategoriesWithCount(),
   ]);
 
   const queryParams: Record<string, string> = {};

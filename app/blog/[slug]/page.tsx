@@ -2,7 +2,6 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import prisma from '@/lib/prisma';
 import { generateMetadata as generateSeoMetadata, generateArticleSchema, generateBreadcrumbSchema } from '@/lib/seo';
 import { InArticleAd, SidebarAd } from '@/components/AdSense';
 import { format } from 'date-fns';
@@ -11,66 +10,26 @@ import BookmarkButton from '@/components/BookmarkButton';
 import Reactions from '@/components/Reactions';
 import Comments from '@/components/Comments';
 import Poll from '@/components/Poll';
-import AISummary from '@/components/AISummary';
-import AIQA from '@/components/AIQA';
 import RelatedPosts from '@/components/RelatedPosts';
 import ShareButton from '@/components/ShareButton';
 import ReadingProgressBar from '@/components/ReadingProgressBar';
 import TableOfContents from '@/components/TableOfContents';
 import ReadingTracker from '@/components/ReadingTracker';
+import ViewCounter from '@/components/ViewCounter';
+import { getPostBySlug, getRelatedPosts } from '@/lib/queries';
 
-// ISR: Revalidate every 60 seconds
-export const revalidate = 60;
+// Force dynamic rendering - database queries happen at runtime
+// React cache() in lib/queries.ts handles request deduplication
+// View increment is handled client-side by ViewCounter for better performance
+export const dynamic = 'force-dynamic';
 
 interface BlogPostPageProps {
   params: { slug: string };
 }
 
-async function getPost(slug: string) {
-  const post = await prisma.post.findUnique({
-    where: { slug, published: true },
-    include: {
-      author: { select: { id: true, name: true, email: true } },
-      categories: true,
-      tags: true,
-    },
-  });
-
-  if (post) {
-    await prisma.post.update({
-      where: { id: post.id },
-      data: { views: { increment: 1 } },
-    });
-  }
-
-  return post;
-}
-
-async function getRelatedPosts(postId: string, categoryIds: string[]) {
-  return prisma.post.findMany({
-    where: {
-      published: true,
-      id: { not: postId },
-      categories: { some: { id: { in: categoryIds } } },
-    },
-    select: {
-      id: true,
-      title: true,
-      slug: true,
-      excerpt: true,
-      thumbnail: true,
-      youtubeUrl: true,
-    },
-    take: 3,
-    orderBy: { publishedAt: 'desc' },
-  });
-}
-
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
-  const post = await prisma.post.findUnique({
-    where: { slug: params.slug, published: true },
-    include: { author: true, tags: true },
-  });
+  // Using cached query - will be deduplicated with the page render
+  const post = await getPostBySlug(params.slug);
 
   if (!post) return { title: 'Post Not Found' };
 
@@ -88,10 +47,12 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 }
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
-  const post = await getPost(params.slug);
+  // Using cached query - deduplicated with generateMetadata call
+  const post = await getPostBySlug(params.slug);
 
   if (!post) notFound();
 
+  // Using cached query for related posts
   const relatedPosts = await getRelatedPosts(
     post.id,
     post.categories.map((c) => c.id)
@@ -261,10 +222,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                           <span className="text-primary-500">📅</span>
                           {formattedDate}
                         </span>
-                        <span className="flex items-center gap-1.5">
-                          <span className="text-accent-500">👁️</span>
-                          {post.views.toLocaleString('vi-VN')} lượt xem
-                        </span>
+                        {/* ViewCounter increments views from client-side for better performance */}
+                        <ViewCounter postId={post.id} initialViews={post.views} />
                         <ReadingTime content={post.content} />
                       </div>
                     </div>

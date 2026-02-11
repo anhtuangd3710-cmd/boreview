@@ -46,7 +46,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { title, content, excerpt, youtubeUrl, thumbnail, published, featured, categories, tags } = body;
+    const { title, content, excerpt, youtubeUrl, thumbnail, published, featured, categories, tags, seoTitle, metaDescription, customSlug } = body;
 
     const existingPost = await prisma.post.findUnique({
       where: { id: params.id },
@@ -56,9 +56,19 @@ export async function PUT(
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
 
-    // Generate new slug if title changed
+    // Generate new slug if customSlug provided or title changed
     let slug = existingPost.slug;
-    if (title && title !== existingPost.title) {
+    if (customSlug && customSlug !== existingPost.slug) {
+      // Use custom slug if provided
+      slug = slugify(customSlug, { lower: true, strict: true });
+      const duplicateSlug = await prisma.post.findFirst({
+        where: { slug, id: { not: params.id } },
+      });
+      if (duplicateSlug) {
+        slug = `${slug}-${Date.now()}`;
+      }
+    } else if (title && title !== existingPost.title && !customSlug) {
+      // Auto-generate from title only if no custom slug
       slug = slugify(title, { lower: true, strict: true });
       const duplicateSlug = await prisma.post.findFirst({
         where: { slug, id: { not: params.id } },
@@ -88,6 +98,8 @@ export async function PUT(
         published: published ?? existingPost.published,
         featured: featured ?? existingPost.featured,
         publishedAt,
+        seoTitle: seoTitle !== undefined ? (seoTitle || null) : existingPost.seoTitle,
+        metaDescription: metaDescription !== undefined ? (metaDescription || null) : existingPost.metaDescription,
         categories: categories
           ? { set: categories.map((id: string) => ({ id })) }
           : undefined,

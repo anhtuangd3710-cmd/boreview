@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -44,6 +44,10 @@ model Post {
   poll        Poll?
   aiSummary   String?    // Cached AI summary
   aiSummaryAt DateTime?  // When summary was generated
+
+  // SEO fields
+  seoTitle        String?  // Custom SEO title (defaults to title if empty)
+  metaDescription String?  // Custom meta description (defaults to excerpt if empty)
 
   // Gamification relations
   pointTransactions PointTransaction[]

@@ -31,6 +31,10 @@ export default function NewPostPage() {
     published: false,
     featured: false,
     selectedCategories: [] as string[],
+    // SEO fields
+    seoTitle: '',
+    metaDescription: '',
+    customSlug: '',
   });
 
   useEffect(() => {
@@ -74,6 +78,10 @@ export default function NewPostPage() {
           published: publish,
           featured: formData.featured,
           categories: formData.selectedCategories,
+          // SEO fields
+          seoTitle: formData.seoTitle || null,
+          metaDescription: formData.metaDescription || null,
+          customSlug: formData.customSlug || null,
         }),
       });
 
@@ -373,6 +381,69 @@ export default function NewPostPage() {
                     className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white text-sm focus:border-red-400 focus:ring-2 focus:ring-red-400/20 transition-all"
                     placeholder="https://youtube.com/watch?v=..."
                   />
+                </div>
+              </div>
+            </div>
+
+            {/* SEO Card */}
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+              <h3 className="flex items-center gap-2 font-semibold text-gray-900 dark:text-white mb-4">
+                <span className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/25">🔍</span>
+                SEO & URL
+              </h3>
+              <div className="space-y-4">
+                {/* Custom Slug */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                    Đường dẫn URL (Slug)
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-400">/blog/</span>
+                    <input
+                      type="text"
+                      value={formData.customSlug}
+                      onChange={(e) => setFormData({ ...formData, customSlug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
+                      className="flex-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white text-sm"
+                      placeholder="tu-dong-tao-tu-tieu-de"
+                    />
+                  </div>
+                  <p className="mt-1 text-xs text-gray-400">Để trống sẽ tự động tạo từ tiêu đề</p>
+                </div>
+
+                {/* SEO Title */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                    SEO Title
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.seoTitle}
+                    onChange={(e) => setFormData({ ...formData, seoTitle: e.target.value })}
+                    maxLength={70}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white text-sm"
+                    placeholder="Tiêu đề SEO (mặc định dùng tiêu đề bài viết)"
+                  />
+                  <p className={`mt-1 text-xs ${formData.seoTitle.length > 60 ? 'text-orange-500' : 'text-gray-400'}`}>
+                    {formData.seoTitle.length}/70 ký tự (khuyến nghị 50-60)
+                  </p>
+                </div>
+
+                {/* Meta Description */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                    Meta Description
+                  </label>
+                  <textarea
+                    value={formData.metaDescription}
+                    onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
+                    maxLength={170}
+                    rows={3}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white text-sm resize-none"
+                    placeholder="Mô tả SEO (mặc định dùng mô tả ngắn)"
+                  />
+                  <p className={`mt-1 text-xs ${formData.metaDescription.length > 160 ? 'text-orange-500' : 'text-gray-400'}`}>
+                    {formData.metaDescription.length}/170 ký tự (khuyến nghị 120-160)
+                  </p>
                 </div>
               </div>
             </div>

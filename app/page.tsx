@@ -1,37 +1,14 @@
 import Link from 'next/link';
-import prisma from '@/lib/prisma';
 import PostCard from '@/components/PostCard';
 import { InArticleAd } from '@/components/AdSense';
 import HeroSection from '@/components/HeroSection';
 import HomeSidebar from '@/components/HomeSidebar';
 import NewsletterSection from '@/components/NewsletterSection';
+import { getFeaturedPosts, getLatestPosts } from '@/lib/queries';
 
-// Force dynamic rendering - don't try to connect to DB during build
+// Force dynamic rendering - database queries happen at runtime
+// React cache() in lib/queries.ts handles request deduplication
 export const dynamic = 'force-dynamic';
-
-async function getFeaturedPosts() {
-  return prisma.post.findMany({
-    where: { published: true, featured: true },
-    include: {
-      author: { select: { id: true, name: true, email: true } },
-      categories: true,
-    },
-    orderBy: { publishedAt: 'desc' },
-    take: 1,
-  });
-}
-
-async function getLatestPosts() {
-  return prisma.post.findMany({
-    where: { published: true },
-    include: {
-      author: { select: { id: true, name: true, email: true } },
-      categories: true,
-    },
-    orderBy: { publishedAt: 'desc' },
-    take: 6,
-  });
-}
 
 export default async function HomePage() {
   const [featuredPosts, latestPosts] = await Promise.all([
