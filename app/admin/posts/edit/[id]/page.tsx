@@ -55,7 +55,7 @@ export default function EditPostPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     Promise.all([
       fetch(`/api/posts/${params.id}`).then((res) => res.json()),
-      fetch('/api/categories').then((res) => res.json()),
+      fetch('/api/admin/categories').then((res) => res.json()),
     ])
       .then(([post, cats]: [Post, Category[]]) => {
         setFormData({

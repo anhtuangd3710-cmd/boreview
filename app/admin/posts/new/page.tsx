@@ -38,7 +38,7 @@ export default function NewPostPage() {
   });
 
   useEffect(() => {
-    fetch('/api/categories')
+    fetch('/api/admin/categories')
       .then((res) => res.json())
       .then((data) => setCategories(data))
       .catch(console.error);

@@ -39,8 +39,8 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
     path: `/blog/${post.slug}`,
     image: post.thumbnail || undefined,
     type: 'article',
-    publishedTime: post.publishedAt?.toISOString(),
-    modifiedTime: post.updatedAt.toISOString(),
+    publishedTime: post.publishedAt ? new Date(post.publishedAt).toISOString() : undefined,
+    modifiedTime: new Date(post.updatedAt).toISOString(),
     authors: post.author.name ? [post.author.name] : undefined,
     tags: post.tags.map((t) => t.name),
   });
@@ -64,8 +64,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     description: post.excerpt,
     url: `${siteUrl}/blog/${post.slug}`,
     image: post.thumbnail || undefined,
-    datePublished: (post.publishedAt || post.createdAt).toISOString(),
-    dateModified: post.updatedAt.toISOString(),
+    datePublished: new Date(post.publishedAt || post.createdAt).toISOString(),
+    dateModified: new Date(post.updatedAt).toISOString(),
     authorName: post.author.name || 'Admin',
   });
 
