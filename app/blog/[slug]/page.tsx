@@ -255,18 +255,35 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 <AISummary postId={post.id} />
               </div> */}
 
-              {/* YouTube Embed - Premium Design */}
+              {/* YouTube Thumbnail + Link - Better for performance & AdSense */}
               {post.youtubeUrl && (
-                <div className="mb-8 rounded-2xl overflow-hidden shadow-2xl bg-gray-900 ring-1 ring-white/10">
+                <a
+                  href={post.youtubeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block mb-8 rounded-2xl overflow-hidden shadow-2xl bg-gray-900 ring-1 ring-white/10 group transition-transform hover:scale-[1.01]"
+                >
+                  {/* Thumbnail with Play Button Overlay */}
                   <div className="aspect-video relative">
-                    <iframe
-                      src={`https://www.youtube.com/embed/${getYouTubeId(post.youtubeUrl)}?rel=0`}
-                      title={post.title}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      className="w-full h-full"
+                    <Image
+                      src={`https://img.youtube.com/vi/${getYouTubeId(post.youtubeUrl)}/maxresdefault.jpg`}
+                      alt={post.title}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 800px"
                     />
+                    {/* Dark overlay on hover */}
+                    <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors" />
+                    {/* Play button */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-20 h-20 rounded-full bg-red-600 flex items-center justify-center shadow-2xl transform group-hover:scale-110 transition-transform">
+                        <svg className="w-10 h-10 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      </div>
+                    </div>
                   </div>
+                  {/* Footer */}
                   <div className="bg-gradient-to-r from-gray-900 to-gray-800 px-5 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-red-600 flex items-center justify-center">
@@ -274,21 +291,16 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                           <path d="M23.5,6.19a3.02,3.02,0,0,0-2.12-2.14C19.5,3.5,12,3.5,12,3.5s-7.5,0-9.38.55A3.02,3.02,0,0,0,.5,6.19,31.35,31.35,0,0,0,0,12a31.35,31.35,0,0,0,.5,5.81A3.02,3.02,0,0,0,2.62,19.95c1.88.55,9.38.55,9.38.55s7.5,0,9.38-.55a3.02,3.02,0,0,0,2.12-2.14A31.35,31.35,0,0,0,24,12,31.35,31.35,0,0,0,23.5,6.19ZM9.55,15.57V8.43L15.82,12Z" />
                         </svg>
                       </div>
-                      <span className="text-gray-300 text-sm font-medium">Video từ YouTube</span>
+                      <span className="text-gray-300 text-sm font-medium">Xem video trên YouTube</span>
                     </div>
-                    <a
-                      href={post.youtubeUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-xl transition-colors"
-                    >
-                      Xem trên YouTube
+                    <span className="flex items-center gap-2 px-4 py-2 bg-red-600 group-hover:bg-red-700 text-white text-sm font-medium rounded-xl transition-colors">
+                      Xem ngay
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                       </svg>
-                    </a>
+                    </span>
                   </div>
-                </div>
+                </a>
               )}
 
               {/* Content */}

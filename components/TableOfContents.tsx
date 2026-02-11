@@ -108,7 +108,7 @@ export default function TableOfContents({ content }: TableOfContentsProps) {
       <div className="border-t border-gray-100 dark:border-gray-700" />
 
       {/* TOC Items */}
-      <ul className="space-y-1">
+      <ul className="space-y-0.5">
         {headings.map((heading, index) => {
           const isActive = activeId === heading.id;
           const isH3 = heading.level === 3;
@@ -119,13 +119,13 @@ export default function TableOfContents({ content }: TableOfContentsProps) {
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.05 }}
+              className={isH3 ? 'ml-4' : ''}
             >
               <button
                 onClick={() => scrollToHeading(heading.id)}
                 className={`
                   relative w-full text-left py-2 px-3 rounded-lg text-sm
-                  transition-all duration-200 group
-                  ${isH3 ? 'pl-6' : ''}
+                  transition-all duration-200 group flex items-start gap-2
                   ${isActive
                     ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 font-medium'
                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-white'
@@ -140,14 +140,12 @@ export default function TableOfContents({ content }: TableOfContentsProps) {
                   />
                 )}
 
-                {/* Icon for H2 */}
-                {!isH3 && (
-                  <span className={`inline-block mr-2 transition-colors ${isActive ? 'text-primary-500' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'}`}>
-                    •
-                  </span>
-                )}
+                {/* Icon */}
+                <span className={`flex-shrink-0 mt-0.5 transition-colors ${isActive ? 'text-primary-500' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'}`}>
+                  {isH3 ? '◦' : '•'}
+                </span>
 
-                <span className="line-clamp-2">{heading.text}</span>
+                <span className="line-clamp-2 leading-snug">{heading.text}</span>
               </button>
             </motion.li>
           );
