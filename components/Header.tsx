@@ -50,6 +50,7 @@ export default function Header() {
   const navLinks = [
     { href: '/', label: 'Trang chủ', icon: '🏠' },
     { href: '/blog', label: 'Blog', icon: '📖' },
+    { href: '/san-pham', label: 'Sản phẩm', icon: '🛍️' },
     { href: '/bookmarks', label: 'Đã lưu', icon: '🔖' },
     { href: '/about', label: 'Về chúng tôi', icon: '💡' },
     { href: '/contact', label: 'Liên hệ', icon: '✉️' },

@@ -419,3 +419,136 @@ model ContactMessage {
   repliedAt DateTime?
 }
 
+// ============================================
+// E-COMMERCE SYSTEM
+// ============================================
+
+// Product Category
+model ProductCategory {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  image       String?
+  sortOrder   Int       @default(0)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+}
+
+// Product
+model Product {
+  id              String          @id @default(cuid())
+  name            String
+  slug            String          @unique
+  description     String          // Rich text description
+  shortDesc       String?         // Short description for cards
+  price           Int             // Price in VND (stored as integer)
+  salePrice       Int?            // Sale price (if on sale)
+  images          String          // JSON array of image URLs
+  thumbnail       String?         // Main thumbnail
+  stock           Int             @default(0)
+  sku             String?         @unique // Stock Keeping Unit
+
+  // External shop links
+  shopeeLink      String?
+  lazadaLink      String?
+  tiktokShopLink  String?
+
+  // SEO
+  seoTitle        String?
+  metaDescription String?
+
+  // Status
+  isActive        Boolean         @default(true)
+  isFeatured      Boolean         @default(false)
+
+  // Stats
+  views           Int             @default(0)
+  soldCount       Int             @default(0)
+
+  // Relations
+  category        ProductCategory @relation(fields: [categoryId], references: [id])
+  categoryId      String
+  orderItems      OrderItem[]
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([categoryId])
+  @@index([isActive, isFeatured])
+}
+
+// Order
+model Order {
+  id              String      @id @default(cuid())
+  orderNumber     String      @unique // e.g., BO-20240101-001
+
+  // Customer Info
+  customerName    String
+  customerPhone   String
+  customerEmail   String?
+
+  // Shipping Address
+  shippingAddress String
+  shippingWard    String?     // Phường/Xã
+  shippingDistrict String?    // Quận/Huyện
+  shippingCity    String?     // Tỉnh/Thành phố
+
+  // Order Info
+  subtotal        Int         // Tổng tiền hàng
+  shippingFee     Int         @default(0)
+  discount        Int         @default(0)
+  total           Int         // Tổng thanh toán
+
+  // Payment
+  paymentMethod   String      @default("COD") // COD = Cash on Delivery
+  paymentStatus   String      @default("PENDING") // PENDING, PAID, REFUNDED
+
+  // Order Status
+  status          String      @default("PENDING") // PENDING, CONFIRMED, SHIPPING, DELIVERED, CANCELLED
+
+  // Notes
+  customerNote    String?
+  adminNote       String?
+
+  // Tracking
+  ipHash          String?
+
+  // Relations
+  items           OrderItem[]
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  confirmedAt     DateTime?
+  shippedAt       DateTime?
+  deliveredAt     DateTime?
+  cancelledAt     DateTime?
+
+  @@index([status])
+  @@index([customerPhone])
+  @@index([orderNumber])
+}
+
+// Order Item
+model OrderItem {
+  id          String   @id @default(cuid())
+  quantity    Int
+  price       Int      // Price at time of purchase
+
+  // Product snapshot (in case product is deleted/changed)
+  productName String
+  productImage String?
+
+  // Relations
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId     String
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productId   String?
+
+  createdAt   DateTime @default(now())
+
+  @@index([orderId])
+}
+

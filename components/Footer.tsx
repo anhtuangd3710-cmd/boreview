@@ -12,6 +12,7 @@ export default function Footer() {
     navigation: [
       { href: '/', label: 'Trang chủ', icon: '🏠' },
       { href: '/blog', label: 'Blog', icon: '📖' },
+      { href: '/san-pham', label: 'Sản phẩm', icon: '🛍️' },
       { href: '/about', label: 'Về chúng tôi', icon: '💡' },
       { href: '/contact', label: 'Liên hệ', icon: '✉️' },
     ],
