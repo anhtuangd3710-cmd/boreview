@@ -148,7 +148,7 @@ export default function AdminNewProductPage() {
           salePrice: formData.salePrice ? parseInt(formData.salePrice) : null,
           stock: parseInt(formData.stock) || 0,
           weight: formData.weight ? parseInt(formData.weight) : null,
-          images: JSON.stringify(formData.images),
+          images: formData.images, // Already an array, will be JSON.stringify in API
         }),
       });
 
