@@ -450,6 +450,7 @@ model Product {
   thumbnail       String?         // Main thumbnail
   stock           Int             @default(0)
   sku             String?         @unique // Stock Keeping Unit
+  weight          Int?            // Weight in grams
 
   // External shop links
   shopeeLink      String?
