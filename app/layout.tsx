@@ -108,6 +108,7 @@ export default function RootLayout({
         <Providers>
           <LayoutWrapper>{children}</LayoutWrapper>
         </Providers>
+        <Analytics />
       </body>
     </html>
   );
